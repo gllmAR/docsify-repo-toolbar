@@ -1,26 +1,28 @@
 (function() {
-    // Default CSS styles for the repository toolbar button
-    const defaultStyles = `
-        .repo-toolbar-button {
+    // Default CSS styles for the toolbar buttons
+    const toolbarStyles = `
+        .sidebar-toolbar {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+        }
+
+        .toolbar-button {
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 10px;
             color: var(--theme-highlight, #ffcc00);
             text-decoration: none;
-            position: absolute;
-            top: 0px;
-            left: 0px;
+            margin-right: 10px; /* Space between buttons */
             transition: opacity 0.3s ease;
         }
 
-        .repo-toolbar-button svg {
+        .toolbar-button svg {
             width: 24px;
             height: 24px;
-        }
-
-        body.close .repo-toolbar-button {
-            display: none;
         }
     `;
 
@@ -55,55 +57,48 @@
         }
     }
 
-    // Docsify plugin function
+    // Docsify plugin function for the repository button
     function initRepoButton(hook, vm) {
         hook.mounted(function() {
-            console.log("Docsify plugin mounted");
+            console.log("Docsify repository plugin mounted");
 
-            // Insert default styles
-            if (!document.querySelector('#repo-toolbar-styles')) {
-                console.log("Adding default styles");
-                addStyles(defaultStyles);
+            // Insert toolbar styles
+            if (!document.querySelector('#toolbar-styles')) {
+                console.log("Adding toolbar styles");
+                addStyles(toolbarStyles);
             }
 
-            // Remove the default GitHub corner link
+            // Remove the default GitHub corner link if it exists
             const githubCorner = document.querySelector('.github-corner');
             if (githubCorner) {
                 console.log("Removing default GitHub corner");
                 githubCorner.remove();
             }
 
-            // Determine the repo URL and icon
-            const repoUrl = vm.config.repo || '';
-            console.log("Repository URL: ", repoUrl);
+            // Ensure there's a shared toolbar container
+            const toolbarContainer = document.querySelector('.sidebar-toolbar') || document.createElement('div');
+            toolbarContainer.className = 'sidebar-toolbar';
 
-            const repoIcon = getRepoIcon(repoUrl);
+            // Add the toolbar container to the sidebar if not already there
+            if (!document.querySelector('.sidebar-toolbar')) {
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    sidebar.appendChild(toolbarContainer);
+                }
+            }
 
             // Create the repository button
             const repoButton = document.createElement('a');
-            repoButton.href = repoUrl;
+            repoButton.href = vm.config.repo || '';
             repoButton.target = '_blank';
-            repoButton.className = 'repo-toolbar-button';
-            repoButton.innerHTML = repoIcon;
+            repoButton.className = 'toolbar-button repo-toolbar-button';
+            repoButton.innerHTML = getRepoIcon(vm.config.repo || '');
 
-            // Append the repo button to the sidebar
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.appendChild(repoButton);
-            }
+            // Add the repository button to the toolbar
+            toolbarContainer.appendChild(repoButton);
 
-            // Toggle visibility based on sidebar state
-            const toggleRepoButtonVisibility = function() {
-                if (document.body.classList.contains('close')) {
-                    repoButton.style.display = 'none';
-                } else {
-                    repoButton.style.display = 'flex';
-                }
-            };
-
-            // Run the function initially and on sidebar toggle
-            toggleRepoButtonVisibility();
-            document.querySelector('.sidebar-toggle').addEventListener('click', toggleRepoButtonVisibility);
+            // Ensure the repo button always displays as flex
+            repoButton.style.display = 'flex';
         });
     }
 
